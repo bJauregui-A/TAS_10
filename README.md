@@ -1,6 +1,9 @@
 # Nodo Sur · TAS 2026 · Grupo #10
 
-Integrantes: Marcelo Carrasco, Benjamín Jáuregui, Benjamín Reyes
+Integrantes: 
+  Marcelo Carrasco
+  Benjamín Jáuregui
+  Benjamín Reyes
 Docente: José Antonio Arellano V.
 
 ## Estructura elegida para el proyecto
