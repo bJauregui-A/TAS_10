@@ -4,6 +4,8 @@
   - **Marcelo Carrasco**
   - **Benjamín Jáuregui**
   - **Benjamín Reyes**
+
+  
 - **Docente: José Antonio Arellano V.**
 
 ## Estructura elegida para el proyecto
