@@ -5,52 +5,55 @@
   - **Benjamín Jáuregui**
   - **Benjamín Reyes**
 
-  
 **Docente: José Antonio Arellano V.**
 
 ## Estructura elegida para el proyecto
 
-El proyecto se arma con cuatro piezas:
+El proyecto se compone de cinco piezas organizadas por funciones:
 
-- **Un balanceador de carga** (HAProxy) que recibe todo el tráfico desde internet.
-- **Dos servidores CMS idénticos** (CMS1 y CMS2), cada uno corriendo el mismo
-  WordPress. El balanceador reparte las visitas entre ambos, y si uno se cae, el
-  otro sigue atendiendo solo.
-- **Una base de datos**, usada por los dos CMS a la vez, para que ambos muestren
-  siempre la misma información.
+- **Un borde de red (Proxy + DNS + Bastión SSH)**: Una sola máquina que da la cara hacia internet/laboratorio. Recibe todo el tráfico web con HAProxy (puertos 80 y 443 con HTTPS), responde las consultas de nombres con BIND9 (puerto 53) y sirve de puerta de entrada segura por SSH para administrar el resto de los equipos.
+- **Dos servidores CMS idénticos (CMS1 y CMS2)**: Cada uno corre el mismo WordPress. El balanceador reparte las visitas entre ambos de forma alternada (50% y 50%). Si uno de ellos se apaga o falla, el otro sigue respondiendo sin que el usuario lo note.
+- **Un servidor de almacenamiento y respaldos (NFS + Backup)**: Guarda en un solo lugar todas las fotos y archivos que suben los usuarios (vía NFS), para que ambos CMS muestren siempre las mismas imágenes. Además, tiene un script automático que todos los días a las 02:00 AM saca copia de seguridad de la base de datos y de las imágenes.
+- **Una base de datos (MariaDB)**: Corre en su propia máquina aislada, protegida de internet. Atiende a los dos CMS al mismo tiempo para que los catálogos, carritos y pedidos sean exactamente los mismos.
 
-Solo el balanceador es visible desde internet; el resto de las máquinas (los dos
-CMS y la base de datos) solo se pueden alcanzar desde dentro de la red privada del
-proyecto.
+Solo la máquina de borde es visible desde la red del laboratorio; el resto de las máquinas (los dos CMS, el servidor NFS/backups y la base de datos) viven dentro de la red privada del proyecto.
 
-## WordPress
+## WordPress y Almacenamiento
 
-Ambos CMS corren WordPress + WooCommerce en modo Multisitio, con el mismo
-`wp-config.php` (mismas claves y la misma base de datos), para que da lo mismo a
-cuál de los dos llegue una visita: se ve exactamente el mismo sitio.
+- Ambos CMS corren WordPress + WooCommerce en modo Multisitio con la misma base de datos.
+- La carpeta `wp-content/uploads` de ambos servidores está montada en red contra el servidor NFS, de modo que cualquier imagen que suba una tienda aparece al instante en ambos nodos.
 
-## SSH
+## SSH y Seguridad
 
-El acceso administrativo a las máquinas es solo por llave (sin contraseña) y solo
-desde las redes de administración autorizadas.
+- El acceso administrativo a todas las máquinas es únicamente mediante llaves criptográficas (las contraseñas por SSH están completamente deshabilitadas).
+- Se configuró una llave dedicada para la revisión docente (`profesor_tas10.pem`), permitiendo acceso y privilegios de administración al usuario `profesor`.
+- Para entrar a las máquinas privadas se salta a través del bastión con `ssh -J`.
 
 ## Firewall
 
-Cada máquina tiene su firewall configurado según su rol:
+Cada máquina tiene su firewall (`ufw`) cerrado al mínimo necesario:
 
-- El balanceador es el único con los puertos 80 y 443 abiertos a cualquiera.
-- Los dos CMS solo aceptan tráfico en el puerto 80 si viene del balanceador.
-- La base de datos solo acepta conexiones desde los dos CMS.
-- El acceso SSH, en todas las máquinas, está restringido a las redes de
-  administración.
+- El borde es el único con los puertos 53 (DNS), 80 (HTTP) y 443 (HTTPS) abiertos a la red.
+- Los dos CMS solo aceptan visitas en el puerto 80 si vienen de la IP del balanceador.
+- El servidor NFS solo permite compartir archivos en el puerto 2049 a los dos CMS.
+- La base de datos solo acepta conexiones en su puerto a los dos CMS y al servidor de backups.
+- El acceso SSH está limitado a las redes de administración autorizadas.
 
 ## Estructura del repositorio
 
 ```
 /
 ├── README.md
-├── DECISIONES.md    # por qué elegimos cada cosa
-├── bitacora.md       # problemas que encontramos y cómo los resolvimos
+├── INVENTARIO.md          # lista de máquinas virtuales, IPs y funciones
+├── DECISIONES.md          # por qué elegimos cada solución
+├── bitacora.md             # problemas encontrados y cómo los resolvimos
+├── CONTRIBUCIONES.md       # quién hizo cada parte
+├── ia-uso.md               # registro de uso responsable de IA
 └── config/
-    └── haproxy.cfg   # configuración real del balanceador (sin contraseñas)
+    ├── haproxy.cfg         # configuración del balanceador de carga
+    ├── backup.sh           # script automatizado de respaldos
+    ├── firewall.md         # reglas de firewall de todas las máquinas
+    ├── zonas-dns.md        # nombres y direcciones IP
+    ├── bind9.conf          # configuración del servidor de nombres
+    └── mariadb.md          # configuración de la base de datos
 ```

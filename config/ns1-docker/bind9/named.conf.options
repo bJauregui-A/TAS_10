@@ -1,0 +1,24 @@
+acl "trusted" {
+	10.30.248.0/24;	
+	10.33.195.128/25;	# WAN
+	10.33.199.0/29;		# Privada
+	10.33.21.0/24;		# Laboratorio	
+	10.33.112.0/24;		# Eduroam
+}; 
+
+options {
+	directory "/var/cache/bind";
+
+	recursion yes;
+	allow-recursion { trusted; };
+	listen-on { 10.33.195.185; 10.33.199.82; 127.0.0.1; };
+	allow-transfer { none; };
+	allow-query { trusted; };
+	forwarders {
+		8.8.8.8;
+		8.8.4.4;
+	};
+	dnssec-validation auto;
+
+	listen-on-v6 { any; };
+};

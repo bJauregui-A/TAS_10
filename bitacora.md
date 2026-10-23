@@ -59,3 +59,14 @@
 **Cómo lo arreglamos:** actualizamos la línea de `cms.tas10.local` en `/etc/hosts` apuntando a la nueva IP del borde (`10.33.195.185`).
 
 **Cómo lo comprobamos:** recargamos el navegador y la página de WordPress y la tienda cargaron de inmediato por HTTPS.
+
+## 7. Contenedor de HAProxy no podía enlazar puertos 80 y 443 al dockerizar el borde
+
+**Qué pasó:** al iniciar el stack Docker Compose en `ns1`, el contenedor `edge_haproxy` entraba en bucle de reinicios indicando `cannot bind socket (Permission denied) for [0.0.0.0:80]` y `[0.0.0.0:443]`.
+
+**Por qué pasaba:** en Linux los puertos inferiores a 1024 son privilegiados. Al usar `network_mode: host`, la imagen oficial de HAProxy arrancaba directamente con el usuario desprivilegiado `haproxy` (UID 99) sin la capacidad del kernel para enlazar puertos bajos del host.
+
+**Cómo lo arreglamos:** se configuró en `docker-compose.yml` la ejecución inicial como `user: root` otorgando las capacidades `NET_BIND_SERVICE` y `SYS_CHROOT`, permitiendo a HAProxy abrir los sockets 80 y 443 y luego realizar el cambio interno seguro a su usuario `haproxy` definido en `haproxy.cfg`.
+
+**Cómo lo comprobamos:** el contenedor inició en estado saludable (`Up`), respondiendo con código 301 en HTTP, código 200 en HTTPS y sirviendo el panel de estadísticas en el puerto 8404.
+

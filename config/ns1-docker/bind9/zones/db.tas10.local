@@ -1,0 +1,15 @@
+;
+; BIND data file for tas10.local
+;
+$TTL	604800
+@	IN	SOA	ns1.tas10.local. admin.tas10.local. (
+			      2		; Serial
+			 604800		; Refresh
+			  86400		; Retry
+			2419200		; Expire
+			 604800 )	; Negative Cache TTL
+;
+@	IN	NS	ns1.tas10.local.
+@	IN	A	10.33.195.185
+ns1	IN      A       10.33.195.185	
+cms	IN	A	10.33.195.185

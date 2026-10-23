@@ -1,0 +1,12 @@
+zone "tas10.local" {
+    type primary;
+    file "/etc/bind/zones/db.tas10.local";
+    allow-query { trusted; };
+    allow-transfer { none; };
+};
+
+zone "private.local" {
+    type primary;
+    file "/etc/bind/zones/db.private.local";
+    allow-query { 10.33.199.80/29; };
+};
