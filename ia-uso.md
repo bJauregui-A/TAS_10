@@ -45,6 +45,13 @@ error, qué se comprobó y qué cambio se terminó aplicando.
 - **Cambio aplicado:** se agregó permiso para el mismo usuario desde la IP del
   segundo servidor, con la misma contraseña.
 
+## 4. Analisis de las maquinas para ver que tanto hemos cumplido.
+
+- **Herramienta:** Antigravity.
+- **Propósito:** encontrar errores de configuración, recomendaciones y ver que nos faltaba de la entrega.
+- **Validación realizada:** se revisaron las propuestas, se aplicaron las que consideramos necesarias.
+- **Cambio aplicado:** Cambio en reglas de firewall de cms1 y del antiguo HaProxy (actual nfs y backup).
+
 ## Nota
 
 Ningún comando ni configuración se aplicó sin revisar antes qué hacía. Las
