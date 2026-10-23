@@ -1,27 +1,27 @@
-# Qué nombre resuelve a qué IP
+# Resolución de nombres de dominio (DNS)
+
+El proyecto cuenta con un servidor de nombres BIND9 autoritativo corriendo en la máquina de borde (`10.33.195.185`).
 
 ## Zona pública (`tas10.local`)
 
-| Nombre | IP |
-|---|---|
-| `ns1.tas10.local` | 10.33.195.185 |
-| `cms.tas10.local` | 10.33.195.206 |
+Es la zona que resuelven los clientes del laboratorio:
+
+| Nombre FQDN | Dirección IP | Función |
+|---|---|---|
+| `ns1.tas10.local` | 10.33.195.185 | Servidor de nombres autoritativo |
+| `cms.tas10.local` | 10.33.195.185 | Punto de entrada web (balanceador HAProxy con HTTPS) |
 
 ## Zona privada (`private.local`)
 
-| Nombre | IP |
-|---|---|
-| `ns1.private.local` | 10.33.199.82 |
-| `db.private.local` | 10.33.199.85 |
-| `cms.private.local` | 10.33.199.83 |
+Es la zona interna utilizada entre las máquinas dentro de la red privada (`10.33.199.80/29`):
 
-## Algo que hay que corregir
+| Nombre FQDN | Dirección IP | Función |
+|---|---|---|
+| `ns1.private.local` | 10.33.199.82 | Interfaz privada del bastión / DNS |
+| `cms.private.local` | 10.33.199.83 | Servidor CMS 1 |
+| `db.private.local` | 10.33.199.85 | Servidor de base de datos MariaDB |
+| `storage.private.local` | 10.33.199.84 | Servidor de almacenamiento NFS y respaldos |
 
-`cms.tas10.local` todavía apunta directo a CMS1 (`10.33.195.206`), **no** al
-balanceador de carga (`10.33.195.192`). Esto quiere decir que, si alguien escribe
-`cms.tas10.local` en el navegador, hoy le llega directo a CMS1 y se salta el
-balanceador por completo — si CMS1 se cae, el sitio no sigue funcionando aunque
-CMS2 esté bien, porque nadie está llegando a CMS2.
+## Funcionamiento del acceso
 
-Hay que cambiar ese registro para que `cms.tas10.local` apunte a
-`10.33.195.192` (el balanceador), no a CMS1 directo.
+Al escribir `https://cms.tas10.local` en el navegador, el servidor DNS responde directamente con la IP del balanceador de carga (`10.33.195.185`), el cual recibe la petición por HTTPS en el puerto 443 y la despacha de forma transparente hacia uno de los dos CMS en la red privada.

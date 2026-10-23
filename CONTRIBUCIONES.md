@@ -2,6 +2,6 @@
 
 | Integrante | Área a cargo |
 |---|---|
-| **Marcelo Carrasco** | Balanceador de carga (HAProxy) |
-| **Benjamín Reyes** | Servidores CMS (WordPress, ambos nodos) |
-| **Benjamín Jáuregui** | Base de datos y DNS (BIND) y firewall |
+| **Marcelo Carrasco** | Servidor de almacenamiento compartido (NFS) y sistema de respaldos automáticos |
+| **Benjamín Reyes** | Servidores CMS (WordPress, réplica y montaje de almacenamiento compartido) |
+| **Benjamín Jáuregui** | Borde de red (HAProxy + BIND9 DNS), Base de datos MariaDB y firewalls |
