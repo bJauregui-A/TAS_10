@@ -1,0 +1,18 @@
+services:
+  db:
+    image: mariadb:10.11
+    env_file: .env
+    environment:
+      MARIADB_DATABASE: ${WORDPRESS_DB_NAME}
+      MARIADB_USER: ${WORDPRESS_DB_USER}
+      MARIADB_PASSWORD: ${WORDPRESS_DB_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+    volumes: [db_data:/var/lib/mysql]
+    networks: [app_back]
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+volumes: {db_data: {}, wp_data: {}}
+networks: {app_front: {}, app_back: {internal: true}}
