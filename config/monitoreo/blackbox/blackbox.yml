@@ -1,0 +1,11 @@
+modules:
+  http_2xx_tls_insecure:
+    prober: http
+    timeout: 5s
+    http:
+      valid_status_codes: [200]
+      method: GET
+      headers:
+        Host: cms.tas10.local
+      tls_config:
+        insecure_skip_verify: true

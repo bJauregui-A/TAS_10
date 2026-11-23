@@ -20,12 +20,19 @@ Status: active
 [ 5] 22/tcp                     ALLOW IN    10.33.112.0/24            (Admin USM)
 [ 6] 22                         ALLOW IN    10.33.96.0/19             (Admin USM)
 [ 7] 80/tcp                     ALLOW IN    Anywhere                  (HTTP hacia balanceador)
-[ 8] 8404/tcp                   ALLOW IN    10.30.248.0/24            (Panel stats HAProxy)
+[ 8] 8404/tcp                   ALLOW IN    10.30.248.0/24            (Panel stats HAProxy admin)
 [ 9] 443/tcp                    ALLOW IN    Anywhere                  (HTTPS seguro)
 [10] 22/tcp                     ALLOW IN    10.33.199.80/29           (Red privada del proyecto)
-[11] 53 (v6)                    ALLOW IN    Anywhere (v6)
-[12] 80/tcp (v6)                ALLOW IN    Anywhere (v6)
-[13] 443/tcp (v6)               ALLOW IN    Anywhere (v6)
+[11] 8404/tcp                   ALLOW IN    10.33.195.128/25          (Panel stats HAProxy admin)
+[12] 8404/tcp                   ALLOW IN    10.33.21.0/24             (Panel stats HAProxy admin)
+[13] 8404/tcp                   ALLOW IN    10.33.112.0/24            (Panel stats HAProxy admin)
+[14] 8404/tcp                   ALLOW IN    10.33.96.0/19             (Panel stats HAProxy admin)
+[15] 8404/tcp                   ALLOW IN    10.33.199.80/29           (Panel stats HAProxy LAN)
+[16] 123/udp                    ALLOW IN    10.33.199.80/29           (NTP interno para red privada)
+[17] 3000/tcp                   ALLOW IN    Redes admin USM + LAN     (Grafana monitoreo)
+[18] 53 (v6)                    ALLOW IN    Anywhere (v6)
+[19] 80/tcp (v6)                ALLOW IN    Anywhere (v6)
+[20] 443/tcp (v6)               ALLOW IN    Anywhere (v6)
 ```
 
 ---
@@ -46,6 +53,7 @@ Status: active
 [ 5] 22/tcp                     ALLOW IN    10.33.112.0/24            (Admin USM)
 [ 6] 22/tcp                     ALLOW IN    10.33.96.0/19             (Admin USM)
 [ 7] 22/tcp                     ALLOW IN    10.33.199.80/29           (Red privada del proyecto)
+[ 8] 9100/tcp                   ALLOW IN    10.33.199.82              (Prometheus node_exporter)
 ```
 
 ---
@@ -66,6 +74,7 @@ Status: active
 [ 5] 22/tcp                     ALLOW IN    10.33.199.80/29           (Red privada del proyecto)
 [ 6] 80/tcp                     ALLOW IN    10.33.199.82              (Solo desde el balanceador)
 [ 7] 22/tcp                     ALLOW IN    10.33.96.0/19             (Admin USM)
+[ 8] 9100/tcp                   ALLOW IN    10.33.199.82              (Prometheus node_exporter)
 ```
 
 ---
@@ -81,9 +90,10 @@ Status: active
      --                         ------      ----
 [ 1] 22/tcp                     ALLOW IN    10.33.199.80/29           (SSH desde la red privada)
 [ 2] 10.33.199.85 7033/tcp      ALLOW IN    10.33.199.83              (CMS1)
-[ 3] 10.33.199.85 7033/tcp      ALLOW IN    10.33.199.82              (Borde / ns1)
+[ 3] 10.33.199.85 7033/tcp      ALLOW IN    10.33.199.82              (Borde / ns1 y mysqld_exporter)
 [ 4] 10.33.199.85 7033/tcp      ALLOW IN    10.33.199.86              (CMS2)
 [ 5] 7033/tcp                   ALLOW IN    10.33.199.84              (Servidor de respaldos)
+[ 6] 9100/tcp                   ALLOW IN    10.33.199.82              (Prometheus node_exporter)
 ```
 
 ---
@@ -100,4 +110,5 @@ Status: active
 [ 1] 22/tcp                     ALLOW IN    10.33.199.80/29           (SSH desde la red privada)
 [ 2] 2049/tcp                   ALLOW IN    10.33.199.83              (NFS imágenes CMS1)
 [ 3] 2049/tcp                   ALLOW IN    10.33.199.86              (NFS imágenes CMS2)
+[ 4] 9100/tcp                   ALLOW IN    10.33.199.82              (Prometheus node_exporter)
 ```

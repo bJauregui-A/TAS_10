@@ -1,0 +1,6 @@
+# Ejemplo de configuracion para mysqld_exporter (copiar a .my.cnf en el servidor, NO subir credenciales a git)
+[client]
+host=10.33.199.85
+port=7033
+user=exporter
+password=CAMBIAR_CLAVE_EXPORTER

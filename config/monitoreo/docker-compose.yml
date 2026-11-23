@@ -1,0 +1,98 @@
+services:
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    container_name: mon_prometheus
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=15d"
+      - "--web.listen-address=127.0.0.1:9090"
+      - "--web.enable-lifecycle"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus_data:/prometheus
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: mon_alertmanager
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+      - "--storage.path=/alertmanager"
+      - "--web.listen-address=127.0.0.1:9093"
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager_data:/alertmanager
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  blackbox:
+    image: prom/blackbox-exporter:v0.25.0
+    container_name: mon_blackbox
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - "--config.file=/etc/blackbox_exporter/blackbox.yml"
+      - "--web.listen-address=127.0.0.1:9115"
+    volumes:
+      - ./blackbox/blackbox.yml:/etc/blackbox_exporter/blackbox.yml:ro
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  mysqld_exporter:
+    image: prom/mysqld-exporter:v0.16.0
+    container_name: mon_mysqld_exporter
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - "--config.my-cnf=/etc/mysqld_exporter/.my.cnf"
+      - "--web.listen-address=127.0.0.1:9104"
+    volumes:
+      - ./mysqld_exporter/.my.cnf:/etc/mysqld_exporter/.my.cnf:ro
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  grafana:
+    image: grafana/grafana:11.3.1
+    container_name: mon_grafana
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - .env
+    environment:
+      - GF_SERVER_HTTP_ADDR=0.0.0.0
+      - GF_SERVER_HTTP_PORT=3000
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  prometheus_data:
+  alertmanager_data:
+  grafana_data:

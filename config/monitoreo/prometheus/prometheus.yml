@@ -1,0 +1,56 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - "127.0.0.1:9093"
+
+rule_files:
+  - "/etc/prometheus/alerts.yml"
+
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["127.0.0.1:9090"]
+
+  - job_name: "hosts"
+    static_configs:
+      - targets: ["10.33.199.82:9100"]
+        labels: { nodo: "ns1-borde", rol: "borde" }
+      - targets: ["10.33.199.83:9100"]
+        labels: { nodo: "cms1", rol: "web" }
+      - targets: ["10.33.199.86:9100"]
+        labels: { nodo: "cms2", rol: "web" }
+      - targets: ["10.33.199.84:9100"]
+        labels: { nodo: "nfs-backup", rol: "storage" }
+      - targets: ["10.33.199.85:9100"]
+        labels: { nodo: "mariadb", rol: "db" }
+
+  - job_name: "haproxy"
+    static_configs:
+      - targets: ["127.0.0.1:8404"]
+        labels: { nodo: "ns1-borde" }
+
+  - job_name: "mariadb"
+    static_configs:
+      - targets: ["127.0.0.1:9104"]
+        labels: { nodo: "mariadb", db_host: "10.33.199.85:7033" }
+
+  - job_name: "blackbox_https"
+    metrics_path: /probe
+    params:
+      module: [http_2xx_tls_insecure]
+    static_configs:
+      - targets:
+          - https://127.0.0.1/
+          - https://127.0.0.1/shop/
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: 127.0.0.1:9115

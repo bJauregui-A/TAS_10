@@ -54,3 +54,38 @@ Comparamos dos formas de autenticación:
 - **Llaves criptográficas (claves privadas/públicas) sin contraseña**: el servidor solo acepta conexiones que presenten una clave autorizada.
 
 **Elegimos autenticación estricta por llaves**, deshabilitando por completo el inicio de sesión por contraseña en todo el proyecto.
+
+## Estrategia de contenerización del borde (HAProxy y BIND9 en Docker)
+
+Para la evolución a contenedores requerida en la Entrega 3:
+
+- **Modo puente (`bridge`) con mapeo de puertos**: Docker crea su propia subred y reglas `iptables` de NAT. Esto tiene el riesgo de ocultar la IP de origen del cliente (dificultando auditorías y logs de acceso) y en Linux puede saltarse las políticas predeterminadas de `ufw`.
+- **Modo red de host (`network_mode: host`)**: los contenedores de HAProxy y BIND9 se enlazan directamente a las interfaces de red de la máquina (WAN y LAN privada).
+
+**Elegimos `network_mode: host`** para los servicios de borde porque preserva la IP real de los clientes en los logs de acceso web y DNS, permite que BIND9 escuche selectivamente en las interfaces requeridas y mantiene a `ufw` en total control del tráfico entrante. Además, **el bastión SSH se mantuvo en el sistema operativo host** para garantizar que la administración remota de la plataforma nunca dependa del estado del motor Docker.
+
+## Por qué MariaDB y NFS se mantienen nativos
+
+Comparamos dos opciones para la base de datos (`ubuntudb`) y el servidor de archivos/respaldos (`marcelovers`):
+
+- **Migrar MariaDB y NFS a contenedores Docker**: unifica el formato de despliegue, pero exige instalar Docker en máquinas sin salida a internet, agrega capas extra de red/volúmenes sobre datos críticos y eleva el riesgo operativo durante la migración.
+- **Mantener MariaDB y NFS nativos en sus propias VMs aisladas**: ambos servicios ya corren dedicados, sin interfaz WAN, con reglas mínimas de `ufw`, discos LVM directos y respaldos verificados.
+
+**Elegimos mantener MariaDB y NFS nativos** porque ya cuentan con aislamiento completo a nivel de VM y red privada, priorizando estabilidad, simplicidad de respaldo/restauración y control estricto del firewall, mientras el borde (`ns1`) y la capa web (`CMS1` y `CMS2`) sí operan en contenedores reproducibles.
+
+## Disponibilidad: balanceo, tolerancia a fallos, alta disponibilidad y SPOF
+
+Es importante distinguir tres conceptos que la arquitectura cubre de forma distinta:
+
+- **Balanceo de carga:** HAProxy reparte las visitas 50/50 (`roundrobin`) entre `CMS1` y `CMS2`.
+- **Tolerancia a fallos en la capa web:** si uno de los dos servidores CMS cae o entra en mantenimiento, HAProxy lo retira automáticamente mediante health checks (`L7OK`) y el otro nodo mantiene el sitio operativo sin interrumpir al usuario.
+- **Alta disponibilidad (HA) total:** implica que **ningún** componente crítico sea punto único de falla. Nuestra plataforma todavía no es HA completa porque mantiene tres puntos únicos de falla (SPOF) conocidos y aceptados dentro del alcance del curso:
+  1. **El borde (`ns1`):** si cae la VM 244, se interrumpen HAProxy y DNS. *Evolución futura:* segundo nodo de borde con Keepalived (VIP flotante) y DNS secundario.
+  2. **La base de datos (`ubuntudb`):** una sola instancia MariaDB atiende a ambos CMS. *Evolución futura:* replicación primario-réplica o clúster Galera; hoy el riesgo se mitiga con backups diarios automatizados y restauración probada (RTO ~4 s).
+  3. **El servidor NFS (`marcelovers`):** un solo nodo sirve `wp-content/uploads`. *Evolución futura:* almacenamiento replicado (GlusterFS/Ceph u object storage S3).
+
+## Observabilidad y sincronización horaria (NTP)
+
+- **Monitoreo en stack separado en `ns1`:** desplegamos Prometheus, Grafana, Alertmanager, `blackbox_exporter` y `mysqld_exporter` en `/opt/nodo-sur-monitoreo/` (independiente del borde `/opt/nodo-sur-borde/`) para poder detener o actualizar la observabilidad sin afectar el tráfico web ni DNS. Las 5 VMs exponen métricas de sistema vía `node_exporter` (puerto `9100/tcp` abierto solo para `10.33.199.82`).
+- **NTP interno en la red privada:** como `marcelovers` y `ubuntudb` no tienen salida a internet, se instaló `chrony` en `ns1` (restringido a `10.33.199.80/29` en `ufw`) para sincronizar la hora de todas las máquinas y asegurar correlación exacta de logs y alertas.
+

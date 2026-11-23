@@ -1,3 +1,6 @@
 Utilities/
 CLAUDE.md
 *.pem
+*.zip
+config/monitoreo/.env
+config/monitoreo/mysqld_exporter/.my.cnf

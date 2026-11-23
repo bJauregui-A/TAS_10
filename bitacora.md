@@ -70,3 +70,52 @@
 
 **Cómo lo comprobamos:** el contenedor inició en estado saludable (`Up`), respondiendo con código 301 en HTTP, código 200 en HTTPS y sirviendo el panel de estadísticas en el puerto 8404.
 
+## 8. La tienda mostraba aviso de 'Próximamente' y los productos daban error 404
+
+**Qué pasó:** al ingresar a la tienda (`/shop/`) aparecía el mensaje *"Great things are on the horizon. Something big is brewing! Our store is in the works and will be launching soon!"*, y al intentar ver un producto individual (`/product/pintura/`) el servidor devolvía un error HTTP 404 Not Found.
+
+**Por qué pasaba:** por un lado, WooCommerce activa por defecto el modo *Coming Soon* (`woocommerce_coming_soon = yes`), bloqueando el acceso al catálogo público a usuarios no autenticados. Por otro lado, las reglas de reescritura de WordPress no se habían regenerado para los tipos de contenido personalizados (*custom post types*) de WooCommerce tras habilitar el modo multisitio.
+
+**Cómo lo arreglamos:** mediante WP-CLI se cambiaron las opciones `woocommerce_coming_soon` y `woocommerce_store_pages_only` a `no`, se regeneraron las reglas de reescritura con `wp rewrite flush` en ambos servidores CMS y se habilitó la pasarela de pago contra entrega (`cod`) para permitir pedidos de prueba.
+
+**Cómo lo comprobamos:** recargamos la página `/shop/` desde un navegador en modo incógnito; la tienda cargó con su catálogo y la página del producto `/product/pintura/` respondió inmediatamente con código HTTP 200 OK.
+
+## 9. Los respaldos automáticos no estaban corriendo y el script tenía errores silenciosos
+
+**Qué pasó:** al auditar el servidor de respaldos (`marcelovers`), no había ningún respaldo nuevo desde el 23 de octubre y existían archivos de base de datos vacíos (`0–20 bytes`) junto a mensajes de éxito en el log.
+
+**Por qué pasaba:** nunca se había registrado el `crontab` de `root`. Además, `/backups/scripts/hacer_backup.sh` tenía un error de escritura en la primera línea (`#/!bin/bash` en vez de `#!/bin/bash`) y no usaba `set -o pipefail`, por lo que un error de `mariadb-dump` antes del pipe a `gzip` quedaba oculto.
+
+**Cómo lo arreglamos:** corregimos el shebang, agregamos `set -euo pipefail`, `PATH` explícito, validación de integridad (`gzip -t` y `tar -tzf`), restringimos permisos a `700`, limpiamos los archivos vacíos y programamos el cron diario a las 02:00 AM.
+
+**Cómo lo comprobamos:** ejecutamos el script manualmente y luego realizamos una prueba controlada de restauración en una base temporal (`wordpress_restore_test`), validando 100% de integridad (67 tablas, 23 archivos) con un RTO técnico de 3.63 segundos (ver `config/restauracion-rpo-rto.md`).
+
+## 10. Reglas de firewall abiertas de más en CMS1 y panel de estadísticas en `ns1`
+
+**Qué pasó:** en la auditoría en vivo de `ufw`, CMS1 tenía los puertos `80` y `443` abiertos a `Anywhere`, y `ns1` tenía el puerto `8404` (estadísticas HAProxy) abierto a `Anywhere` con reglas duplicadas.
+
+**Por qué pasaba:** quedaron reglas residuales de pruebas anteriores que no se habían retirado tras consolidar el balanceador.
+
+**Cómo lo arreglamos:** eliminamos las reglas `Anywhere` de los puertos `80` y `443` en CMS1 (dejando solo `80/tcp` desde `10.33.199.82`) y restringimos el puerto `8404/tcp` en `ns1` únicamente a las redes de administración USM y la red privada del proyecto.
+
+**Cómo lo comprobamos:** revisamos `ufw status numbered` en ambos equipos y confirmamos que HAProxy seguía viendo ambos CMS en estado `UP` y sirviendo `HTTP/2 200` por HTTPS.
+
+## 11. Hora desincronizada en las máquinas privadas sin salida a internet
+
+**Qué pasó:** `marcelovers` y `ubuntudb` mostraban `System clock synchronized: no`, con desfases de `+5.98 s` y `-34.35 s` respectivamente, lo que impedía correlacionar logs y eventos con precisión.
+
+**Por qué pasaba:** ambas VMs están aisladas sin interfaz WAN y el gateway de la red privada no tiene salida a internet, por lo que `systemd-timesyncd` no alcanzaba servidores NTP externos.
+
+**Cómo lo arreglamos:** instalamos `chrony` en `ns1` (`10.33.199.82`) como servidor NTP interno restringido a `10.33.199.80/29` (puerto `123/udp` en `ufw`), y apuntamos `systemd-timesyncd` de `marcelovers` y `ubuntudb` hacia `10.33.199.82`.
+
+**Cómo lo comprobamos:** ejecutamos `timedatectl status` y `timedatectl timesync-status` en ambas VMs, confirmando `System clock synchronized: yes` contra `10.33.199.82`.
+
+## 12. Error HTTP 500 en CMS1 por signo `$` sin escapar en `compose.yaml`
+
+**Qué pasó:** tras corregir el montaje NFS en el contenedor de CMS1, HAProxy marcó `cms1` como `DOWN (L7STS)` y todas las visitas pasaron automáticamente a `cms2`.
+
+**Por qué pasaba:** al descomentar `WORDPRESS_CONFIG_EXTRA` en `compose.yaml`, Docker Compose interpretó `$_SERVER` como una variable de entorno vacía, inyectando código PHP inválido en `wp-config.php` (`PHP Fatal error: Cannot use isset() on the result of an expression`).
+
+**Cómo lo diagnosticamos:** consultamos el estado de HAProxy (`L7STS`), verificamos `HTTP 500` con `curl` y leímos el error exacto en `docker logs cms_backend`; además la alerta `BackendCMSCaido` se disparó en Prometheus/Grafana confirmando el monitoreo en vivo. La corrección consiste en escapar el símbolo como `$$_SERVER` en `compose.yaml`.
+
+

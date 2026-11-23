@@ -1,0 +1,14 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  group_by: ["alertname", "nodo", "severity"]
+  group_wait: 15s
+  group_interval: 2m
+  repeat_interval: 1h
+  receiver: "alertmanager_local"
+
+receivers:
+  - name: "alertmanager_local"
+    # Canal externo (Discord webhook o SMTP) se agrega aqui cuando se habilite.
+    # Las alertas y recuperaciones quedan visibles en Alertmanager (9093) y Grafana (3000).
