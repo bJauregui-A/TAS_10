@@ -1,8 +1,11 @@
 {
   "id": null,
   "uid": "nodo-sur-overview",
-  "title": "Nodo Sur · Grupo 10 · Salud General",
-  "tags": ["nodo-sur", "tas10"],
+  "title": "Nodo Sur \u00b7 Grupo 10 \u00b7 Salud General",
+  "tags": [
+    "nodo-sur",
+    "tas10"
+  ],
   "timezone": "browser",
   "schemaVersion": 39,
   "version": 1,
@@ -12,16 +15,35 @@
       "id": 1,
       "type": "stat",
       "title": "Hosts Activos (de 5)",
-      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
-      "targets": [{ "expr": "sum(up{job=\"hosts\"})", "refId": "A" }],
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "expr": "sum(up{job=\"hosts\"})",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "red", "value": null },
-              { "color": "yellow", "value": 4 },
-              { "color": "green", "value": 5 }
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 4
+              },
+              {
+                "color": "green",
+                "value": 5
+              }
             ]
           }
         }
@@ -31,16 +53,35 @@
       "id": 2,
       "type": "stat",
       "title": "Backends CMS UP (HAProxy)",
-      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
-      "targets": [{ "expr": "sum(haproxy_server_status{proxy=\"cms_backend\", state=\"UP\"})", "refId": "A" }],
+      "gridPos": {
+        "x": 6,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "expr": "sum(haproxy_server_status{proxy=\"cms_backend\", state=\"UP\"})",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "red", "value": null },
-              { "color": "yellow", "value": 1 },
-              { "color": "green", "value": 2 }
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "green",
+                "value": 2
+              }
             ]
           }
         }
@@ -50,12 +91,34 @@
       "id": 3,
       "type": "stat",
       "title": "MariaDB (10.33.199.85:7033)",
-      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
-      "targets": [{ "expr": "mysql_up", "refId": "A" }],
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "expr": "mysql_up",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "mappings": [
-            { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
           ]
         }
       }
@@ -64,16 +127,35 @@
       "id": 4,
       "type": "stat",
       "title": "Sonda HTTPS (/ y /shop/)",
-      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
-      "targets": [{ "expr": "sum(probe_success{job=\"blackbox_https\"})", "refId": "A" }],
+      "gridPos": {
+        "x": 18,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "expr": "sum(probe_success{job=\"blackbox_https\"})",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "red", "value": null },
-              { "color": "yellow", "value": 1 },
-              { "color": "green", "value": 2 }
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "green",
+                "value": 2
+              }
             ]
           }
         }
@@ -83,40 +165,115 @@
       "id": 5,
       "type": "timeseries",
       "title": "Latencia HTTPS (segundos)",
-      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 7 },
-      "targets": [{ "expr": "probe_duration_seconds{job=\"blackbox_https\"}", "legendFormat": "{{instance}}", "refId": "A" }],
-      "fieldConfig": { "defaults": { "unit": "s" } }
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 12,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "probe_duration_seconds{job=\"blackbox_https\"}",
+          "legendFormat": "{{instance}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        }
+      }
     },
     {
       "id": 6,
       "type": "timeseries",
       "title": "Trafico HAProxy (req/s por backend)",
-      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 7 },
-      "targets": [{ "expr": "rate(haproxy_server_http_responses_total{proxy=\"cms_backend\"}[1m])", "legendFormat": "{{server}} ({{code}})", "refId": "A" }],
-      "fieldConfig": { "defaults": { "unit": "reqps" } }
+      "gridPos": {
+        "x": 12,
+        "y": 4,
+        "w": 12,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "rate(haproxy_server_http_responses_total{proxy=\"cms_backend\"}[1m])",
+          "legendFormat": "{{server}} ({{code}})",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        }
+      }
     },
     {
       "id": 7,
       "type": "timeseries",
       "title": "Uso de CPU (%) por VM",
-      "gridPos": { "x": 0, "y": 11, "w": 8, "h": 7 },
-      "targets": [{ "expr": "100 - (avg by (nodo) (irate(node_cpu_seconds_total{mode=\"idle\"}[2m])) * 100)", "legendFormat": "{{nodo}}", "refId": "A" }],
-      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100 } }
+      "gridPos": {
+        "x": 0,
+        "y": 11,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "100 - (avg by (nodo) (irate(node_cpu_seconds_total{mode=\"idle\"}[2m])) * 100)",
+          "legendFormat": "{{nodo}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100
+        }
+      }
     },
     {
       "id": 8,
       "type": "timeseries",
       "title": "Uso de RAM (%) por VM",
-      "gridPos": { "x": 8, "y": 11, "w": 8, "h": 7 },
-      "targets": [{ "expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100", "legendFormat": "{{nodo}}", "refId": "A" }],
-      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100 } }
+      "gridPos": {
+        "x": 8,
+        "y": 11,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100",
+          "legendFormat": "{{nodo}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100
+        }
+      }
     },
     {
       "id": 9,
       "type": "bargauge",
       "title": "Uso de Disco (%) por VM",
-      "gridPos": { "x": 16, "y": 11, "w": 8, "h": 7 },
-      "targets": [{ "expr": "(1 - (node_filesystem_avail_bytes{mountpoint=\"/\"} / node_filesystem_size_bytes{mountpoint=\"/\"})) * 100", "legendFormat": "{{nodo}}", "refId": "A" }],
+      "gridPos": {
+        "x": 16,
+        "y": 11,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "(1 - (node_filesystem_avail_bytes{mountpoint=\"/\"} / node_filesystem_size_bytes{mountpoint=\"/\"})) * 100",
+          "legendFormat": "{{nodo}}",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "percent",
@@ -125,9 +282,18 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 70 },
-              { "color": "red", "value": 85 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 85
+              }
             ]
           }
         }
@@ -137,18 +303,215 @@
       "id": 10,
       "type": "timeseries",
       "title": "Conexiones MariaDB",
-      "gridPos": { "x": 0, "y": 18, "w": 12, "h": 6 },
+      "gridPos": {
+        "x": 0,
+        "y": 18,
+        "w": 12,
+        "h": 6
+      },
       "targets": [
-        { "expr": "mysql_global_status_threads_connected", "legendFormat": "Conectadas", "refId": "A" },
-        { "expr": "mysql_global_status_threads_running", "legendFormat": "Activas", "refId": "B" }
+        {
+          "expr": "mysql_global_status_threads_connected",
+          "legendFormat": "Conectadas",
+          "refId": "A"
+        },
+        {
+          "expr": "mysql_global_status_threads_running",
+          "legendFormat": "Activas",
+          "refId": "B"
+        }
       ]
     },
     {
       "id": 11,
       "type": "alertlist",
       "title": "Alertas Activas (Prometheus)",
-      "gridPos": { "x": 12, "y": 18, "w": 12, "h": 6 },
-      "options": { "viewMode": "list", "stateFilter": { "firing": true, "pending": true, "normal": false } }
+      "gridPos": {
+        "x": 12,
+        "y": 18,
+        "w": 12,
+        "h": 6
+      },
+      "options": {
+        "viewMode": "list",
+        "stateFilter": {
+          "firing": true,
+          "pending": true,
+          "normal": false
+        }
+      }
+    },
+    {
+      "id": 12,
+      "title": "Historial de Disponibilidad y Ca\u00eddas por M\u00e1quina (Host Uptime Timeline)",
+      "type": "state-timeline",
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 24
+      },
+      "targets": [
+        {
+          "expr": "up{job=\"hosts\"}",
+          "legendFormat": "{{nodo}} ({{instance}})",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "showValue": "never",
+        "mergeValues": true,
+        "alignValue": "left",
+        "rowHeight": 0.85
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "lineWidth": 0,
+            "fillOpacity": 85
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "CA\u00cdDA / DOWN",
+                  "color": "semi-dark-red",
+                  "index": 0
+                },
+                "1": {
+                  "text": "OPERATIVO / UP",
+                  "color": "semi-dark-green",
+                  "index": 1
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 13,
+      "title": "Historial de Estado de Servicios Cr\u00edticos (HAProxy Backends, MariaDB y HTTPS)",
+      "type": "state-timeline",
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 31
+      },
+      "targets": [
+        {
+          "expr": "haproxy_server_status{proxy=\"cms_backend\", state=\"UP\"}",
+          "legendFormat": "Backend HAProxy: {{server}}",
+          "refId": "A"
+        },
+        {
+          "expr": "mysql_up",
+          "legendFormat": "Base de Datos MariaDB (10.33.199.85:7033)",
+          "refId": "B"
+        },
+        {
+          "expr": "probe_success{job=\"blackbox_https\"}",
+          "legendFormat": "Sonda HTTPS: {{instance}}",
+          "refId": "C"
+        }
+      ],
+      "options": {
+        "showValue": "never",
+        "mergeValues": true,
+        "alignValue": "left",
+        "rowHeight": 0.85
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "lineWidth": 0,
+            "fillOpacity": 85
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "FALLO / CA\u00cdDA",
+                  "color": "semi-dark-red",
+                  "index": 0
+                },
+                "1": {
+                  "text": "OK / ACTIVO",
+                  "color": "semi-dark-green",
+                  "index": 1
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
     }
-  ]
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": false,
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      },
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "enable": true,
+        "expr": "ALERTS{alertstate=\"firing\"}",
+        "hide": false,
+        "iconColor": "rgba(255, 96, 96, 1)",
+        "name": "Alertas Prometheus (Firing)",
+        "step": "60s",
+        "tagKeys": "alertname,severity,nodo",
+        "textFormat": "{{alertname}} - {{summary}}",
+        "titleFormat": "ALERTA: {{alertname}}"
+      }
+    ]
+  }
 }

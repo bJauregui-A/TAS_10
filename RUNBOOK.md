@@ -145,7 +145,61 @@ Guía operativa para diagnosticar, contener, recuperar y revertir incidentes en 
 
 ---
 
-## 3. Procedimientos operativos por incidente
+## 3. Scripts Automatizados para la Demostración en Vivo
+
+Para facilitar la ejecución fluida durante los 15-20 minutos de defensa frente a la comisión evaluadora, se han dispuesto tres scripts interactivos en la raíz del repositorio:
+
+### A. Prueba de Ataque y Saturación con k6 (`./demo_ataque_k6.sh`)
+Somete el clúster a una ráfaga agresiva de peticiones dinámicas (búsquedas SQL en WooCommerce, ordenamientos de catálogo y accesos concurrentes) para comprobar la resiliencia y el comportamiento ante sobrecarga.
+```bash
+./demo_ataque_k6.sh
+# Modos disponibles:
+#   1) Rápido (60s, hasta 120 VUs) - Recomendado para demostración en vivo.
+#   2) Estándar (105s, hasta 200 VUs).
+#   3) Extremo (145s, hasta 300 VUs - búsqueda de punto de quiebre).
+```
+- **Qué observar:** Abrir simultáneamente **Grafana** (`http://10.33.195.185:3000/`, `admin:tas10_grafana`) en los paneles de *Tráfico HAProxy*, *Uso de CPU* y *Latencia HTTPS*, más las estadísticas de HAProxy en `http://10.33.195.185:8404/`.
+
+### B. Comprobación y Restauración de Respaldos en Vivo (`./demo_comprobar_respaldos.sh`)
+Ejecuta automáticamente la **Etapa 4** de la evaluación:
+```bash
+./demo_comprobar_respaldos.sh
+# Opciones no interactivas:
+#   ./demo_comprobar_respaldos.sh --clean   (Restaura, audita y limpia la base de prueba)
+#   ./demo_comprobar_respaldos.sh --keep    (Preserva 'wordpress_eval' para inspección docente)
+```
+- **Flujo automatizado:**
+  1. Audita el almacenamiento de respaldos en `10.33.199.84` (`/backups/db/` y `/backups/wp_files/`).
+  2. Verifica la integridad binaria (`gzip -t` y `tar -tzf`) y calcula el hash SHA-256.
+  3. Comprueba en vivo que la base de datos `wordpress_eval` en MariaDB está **ausente** (0 tablas).
+  4. Inicia cronómetro de alta precisión, crea `wordpress_eval` y restaura el volcado por streaming LAN.
+  5. Imprime el **RTO medido en tiempo real** (~1.8 a 3.8 segundos).
+  6. Compara exhaustivamente la paridad al 100% de tablas (67), usuarios (6), posts (44) y órdenes (5) entre `wordpress` (producción) y `wordpress_eval`.
+
+### C. Caídas Controladas y Observabilidad (`./demo_caida_servicios.sh`)
+Permite demostrar la **Etapa 3** (Observabilidad y alertas) con un menú de un solo paso:
+```bash
+./demo_caida_servicios.sh
+# Opciones del menú:
+#   1) Caída controlada de MariaDB (systemctl stop mariadb) -> Alerta MariaDBCaida y Timeline ROJO.
+#   2) Caída y failover de CMS1 (docker stop cms_backend) -> HAProxy deriva al 100% a CMS2.
+#   3) Caída de Host / node_exporter (CMS2) -> Visualización de Host DOWN en State Timeline.
+```
+
+---
+
+## 4. Observabilidad y State Timeline en Grafana
+
+El panel de control general en **`http://10.33.195.185:3000/`** (Credenciales: `admin` / `tas10_grafana`) cuenta con dos paneles históricos de disponibilidad:
+- **Panel 12: Historial de Disponibilidad y Caídas por Máquina (State Timeline):**
+  Monitorea de forma continua las 5 máquinas virtuales (`ns1-borde`, `cms1`, `cms2`, `nfs-backup`, `mariadb`). Cada barra horizontal refleja el historial de tiempo en verde (**UP / OPERATIVO**) y pinta inmediatamente en rojo (**DOWN / CAÍDA**) cualquier desconexión de máquina.
+- **Panel 13: Historial de Estado de Servicios Críticos (State Timeline):**
+  Registra el historial de salud de los backends de HAProxy (`cms1` y `cms2`), la base de datos MariaDB (`10.33.199.85:7033`) y las sondas sintéticas HTTPS de Blackbox Exporter.
+- **Anotaciones de Alertas Prometheus:** Cualquier alerta disparada (`MariaDBCaida`, `SitioWebCaido`, `HostCaido`) se proyecta como una bandera roja vertical directamente sobre las gráficas de tráfico y latencia.
+
+---
+
+## 5. Procedimientos operativos por incidente
 
 ### Incidente A · Caída de un nodo CMS (`BackendCMSCaido`)
 - **Síntoma:** Alerta `BackendCMSCaido` en Prometheus/Grafana; HAProxy `:8404` marca `cms1` o `cms2` en `DOWN (L7STS/L4CON)`. El sitio sigue operativo por el otro nodo.

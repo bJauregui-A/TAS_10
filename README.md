@@ -134,7 +134,7 @@ Se diseñaron y ejecutaron tres suites de pruebas de carga contra `https://cms.t
   | `ben4shot` | Administrador (Super Admin) | `tas_10` | Cuenta de equipo / Integrante |
   | `cliente` | Cliente (Customer) | `tas_10` | Pruebas de compra, carrito y checkout |
 - **Estadísticas HAProxy:** [http://10.33.195.185:8404/](http://10.33.195.185:8404/)
-- **Panel de Monitoreo Grafana:** [http://10.33.195.185:3000/](http://10.33.195.185:3000/) *(Dashboard: Nodo Sur · Grupo 10 · Salud General)*
+- **Panel de Monitoreo Grafana:** [http://10.33.195.185:3000/](http://10.33.195.185:3000/) *(Usuario: `admin` · Clave: `tas10_grafana` · Incluye paneles 12 y 13 con State Timeline de caídas de máquinas y servicios)*
 - **Bastión SSH:**
   ```bash
   ssh -i profesor_tas10.pem profesor@10.33.195.185
@@ -149,12 +149,34 @@ Se diseñaron y ejecutaron tres suites de pruebas de carga contra `https://cms.t
 
 ---
 
-## 6. Etapas de Evaluación y Defensa en Vivo (Viernes 27/11)
+## 6. Scripts Automatizados para Demostración en Vivo
+
+Para ejecutar la demostración y defensa de forma rápida y controlada, se disponen tres scripts en el directorio raíz:
+
+1. **Ataque y Saturación con k6 (`./demo_ataque_k6.sh`):**
+   ```bash
+   ./demo_ataque_k6.sh
+   ```
+   Ejecuta ráfagas de peticiones concurrentes contra `https://cms.tas10.local/` (60s a 120 VUs en modo rápido, hasta 300 VUs en modo extremo) para observar el comportamiento y la resiliencia en tiempo real en Grafana y HAProxy.
+2. **Comprobación y Restauración de Respaldos (`./demo_comprobar_respaldos.sh`):**
+   ```bash
+   ./demo_comprobar_respaldos.sh
+   ```
+   Audita los respaldos en `10.33.199.84`, valida su integridad binaria (`gzip -t` / `tar -tzf`), mide el **RTO en vivo** (~3.7s) restaurando contra `wordpress_eval` y compara la consistencia del 100% de tablas y registros frente a producción (cumple la **Etapa 4** de la rúbrica).
+3. **Caídas Controladas y Failover (`./demo_caida_servicios.sh`):**
+   ```bash
+   ./demo_caida_servicios.sh
+   ```
+   Menú interactivo para inyectar caídas de MariaDB (`systemctl stop mariadb`), failover de contenedor CMS1 o caída de host (`node_exporter`) para ver cómo el **State Timeline de Grafana** pinta el incidente en rojo y cómo se recupera en verde (cumple la **Etapa 3** de la rúbrica).
+
+---
+
+## 7. Etapas de Evaluación y Defensa en Vivo (Viernes 27/11)
 
 Las 6 etapas establecidas para la defensa presencial se encuentran detalladas y automatizadas con comandos exactos en **[RUNBOOK.md](RUNBOOK.md)**:
 1. **Etapa 1:** Servicios operativos y validación de dependencia de Base de Datos.
 2. **Etapa 2:** Resolución DNS (`cms.tas10.local` $\to$ `10.33.195.185`) y navegación HTTPS.
 3. **Etapa 3:** Observabilidad y caída controlada de BD (`systemctl stop mariadb`, alertas Grafana y logs NTP).
-4. **Etapa 4:** Restauración de BD en base de evaluación (`wordpress_eval`, RTO real 1.83s, RPO 0s).
+4. **Etapa 4:** Restauración de BD en base de evaluación (`wordpress_eval`, RTO real 3.79s, RPO 0s).
 5. **Etapa 5:** Validación final y recuperación de servicios.
 6. **Etapa 6:** Defensa individual sobre arquitectura, decisiones y operación.

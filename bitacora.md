@@ -176,3 +176,17 @@
 5. Sincronización de las 6 etapas de la defensa práctica descritas por el profesor para el viernes 27/11.
 
 **Cómo lo comprobamos:** se validó la integridad estructural del documento con 8 tablas y 55 párrafos, y se generó la versión oficial en PDF (`Informe_Entrega_Final_TAS_2026_Grupo10.pdf`).
+
+## 18. Instrumentación de Suite de Demostración: Ataque k6, State Timeline en Grafana y Verificación de Respaldos
+
+**Qué pasó:** para la defensa práctica del viernes 27/11, se requería una batería de pruebas demostrables en vivo para evidenciar el límite de resistencia del clúster bajo ataque, registrar el historial de caídas de máquinas en Grafana y comprobar los respaldos con cálculo de RTO en tiempo real según la rúbrica docente.
+
+**Por qué pasaba:** el dashboard de Grafana únicamente mostraba el número instantáneo de hosts y servicios (ej. `sum(up) = 5`), sin un panel temporal continuo (State Timeline) que permitiera auditar caídas pasadas o visualizarlas en vivo. Además, los respaldos y pruebas de carga carecían de scripts ejecutables interactivos con diagnóstico formateado.
+
+**Cómo lo arreglamos:**
+1. **Historial de Caídas en Grafana:** se incorporaron los paneles 12 y 13 (`state-timeline`) en `nodo-sur-overview.json` mapeando `up{job="hosts"}` (verde para UP, rojo para DOWN) y los servicios críticos (HAProxy backends, MariaDB y HTTPS), sincronizándolo en `/opt/nodo-sur-monitoreo/` en VM 185.
+2. **Ataque k6 (`demo_ataque_k6.sh` y `k6-ataque-saturacion.js`):** se implementó un test de saturación agresivo con búsquedas dinámicas SQL y ordenamientos en WooCommerce para medir el límite de concurrencia de workers PHP/Apache (hasta 300 VUs).
+3. **Comprobación de Respaldos (`demo_comprobar_respaldos.sh`):** se automatizó la Etapa 4 de la rúbrica, auditando `/backups/`, verificando compresión binaria (`gzip -t` / `tar -tzf`), demostrando la condición de base de datos ausente (`wordpress_eval`), restaurando en streaming LAN con medición cronometrada del RTO (3.79s) y validando la paridad al 100% de tablas y registros.
+4. **Caídas Controladas (`demo_caida_servicios.sh`):** script interactivo para inyectar fallos de MariaDB (Etapa 3), failover de CMS1 y caída de node_exporter para observar el cambio inmediato a rojo en Grafana.
+
+**Cómo lo comprobamos:** se ejecutó de extremo a extremo `./demo_comprobar_respaldos.sh --clean`, certificando un RTO real de 3.79s con 67 tablas y 6 usuarios idénticos a producción, y se probó la ejecución de k6 alcanzando 100% de éxito en peticiones.
