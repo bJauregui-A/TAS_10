@@ -151,19 +151,19 @@ Se diseñaron y ejecutaron tres suites de pruebas de carga contra `https://cms.t
 
 ## 6. Scripts Automatizados para Demostración en Vivo
 
-Para ejecutar la demostración y defensa de forma rápida y controlada, se disponen tres scripts en el directorio raíz:
+Para ejecutar la demostración y defensa de forma rápida y controlada, se disponen tres scripts en el directorio raíz (para una explicación exhaustiva de su funcionamiento interno, arquitectura y opciones avanzadas, consultar la **[Guía de Demostración y Pruebas en Vivo](GUIA_DEMOSTRACION.md)**):
 
-1. **Ataque y Saturación con k6 (`./demo_ataque_k6.sh`):**
+1. **Ataque y Saturación con k6 ([`./demo_ataque_k6.sh`](demo_ataque_k6.sh)):**
    ```bash
    ./demo_ataque_k6.sh
    ```
    Ejecuta ráfagas de peticiones concurrentes contra `https://cms.tas10.local/` (60s a 120 VUs en modo rápido, hasta 300 VUs en modo extremo) para observar el comportamiento y la resiliencia en tiempo real en Grafana y HAProxy.
-2. **Comprobación y Restauración de Respaldos (`./demo_comprobar_respaldos.sh`):**
+2. **Comprobación y Restauración de Respaldos ([`./demo_comprobar_respaldos.sh`](demo_comprobar_respaldos.sh)):**
    ```bash
    ./demo_comprobar_respaldos.sh
    ```
-   Audita los respaldos en `10.33.199.84`, valida su integridad binaria (`gzip -t` / `tar -tzf`), mide el **RTO en vivo** (~3.7s) restaurando contra `wordpress_eval` y compara la consistencia del 100% de tablas y registros frente a producción (cumple la **Etapa 4** de la rúbrica).
-3. **Caídas Controladas y Failover (`./demo_caida_servicios.sh`):**
+   Audita los respaldos en `10.33.199.84`, valida su integridad binaria (`gzip -t` / `tar -tzf`), mide el **RTO en vivo** (~3.79s) restaurando contra `wordpress_eval` y compara la consistencia del 100% de tablas y registros frente a producción (cumple la **Etapa 4** de la rúbrica).
+3. **Caídas Controladas y Failover ([`./demo_caida_servicios.sh`](demo_caida_servicios.sh)):**
    ```bash
    ./demo_caida_servicios.sh
    ```
