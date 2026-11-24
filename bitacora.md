@@ -161,3 +161,18 @@
 **Cómo lo arreglamos:** se copiaron los directorios `woocommerce` y `woocommerce-mercadopago` desde el host hacia el contenedor `cms_backend` con permisos `www-data:www-data`, verificando su carga mediante CLI.
 
 **Cómo lo comprobamos:** se verificó que `WC()` carga correctamente en ambos CMS y que ambos devuelven las pasarelas `cod` y `bacs` en estado activo (`is_available: YES`).
+
+## 17. Actualización definitiva del Informe de Entrega Final y Rúbricas de Defensa
+
+**Qué pasó:** el archivo `Informe_Entrega_Final_TAS_2026_Grupo10.docx` correspondía a un borrador preliminar de la Entrega 1 con diagramas y tablas desactualizadas (ej. balanceador en VM 220, CMS2 no implementado, ausencia de métricas k6 y de pruebas de restauración).
+
+**Por qué pasaba:** la infraestructura evolucionó a un cluster distribuido final con balanceador en VM 185, dos nodos CMS en contenedores Docker, MariaDB dedicado en VM 85 y servidor de almacenamiento y backups en VM 84, pero el documento no había sido sincronizado tras las pruebas de carga y resiliencia.
+
+**Cómo lo arreglamos:** se reescribió íntegramente el contenido del informe en formato `.docx` y se compiló a `.pdf` de 12 páginas, integrando:
+1. Tabla de inventario real de 5 VMs y contenedores Docker.
+2. Resultados empíricos de las pruebas de carga k6 (nominal y estrés con 0% tasa de fallo HTTP).
+3. Métricas reales de resiliencia (RPO = 0s, RTO = 1.83s medido en restauración sobre `wordpress_eval`).
+4. Matriz de riesgos operacionales, plan de contingencia y controles UFW implementados.
+5. Sincronización de las 6 etapas de la defensa práctica descritas por el profesor para el viernes 27/11.
+
+**Cómo lo comprobamos:** se validó la integridad estructural del documento con 8 tablas y 55 párrafos, y se generó la versión oficial en PDF (`Informe_Entrega_Final_TAS_2026_Grupo10.pdf`).

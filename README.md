@@ -125,6 +125,14 @@ Se diseñaron y ejecutaron tres suites de pruebas de carga contra `https://cms.t
 
 - **Tienda Pública:** [https://cms.tas10.local/](https://cms.tas10.local/)
 - **Panel de Administración:** [https://cms.tas10.local/wp-admin/](https://cms.tas10.local/wp-admin/)
+- **Informe de Entrega Final:** [Informe_Entrega_Final_TAS_2026_Grupo10.pdf](Informe_Entrega_Final_TAS_2026_Grupo10.pdf) y [Informe_Entrega_Final_TAS_2026_Grupo10.docx](Informe_Entrega_Final_TAS_2026_Grupo10.docx)
+- **Cuentas de Acceso para Evaluación:**
+  | Usuario | Rol | Contraseña | Propósito |
+  |---|---|---|---|
+  | `profesor` | Administrador (Super Admin) | `tas_10` | Evaluación docente y gestión completa |
+  | `breyesc` | Administrador (Super Admin) | `tas_10` | Cuenta de equipo / Integrante |
+  | `ben4shot` | Administrador (Super Admin) | `tas_10` | Cuenta de equipo / Integrante |
+  | `cliente` | Cliente (Customer) | `tas_10` | Pruebas de compra, carrito y checkout |
 - **Estadísticas HAProxy:** [http://10.33.195.185:8404/](http://10.33.195.185:8404/)
 - **Panel de Monitoreo Grafana:** [http://10.33.195.185:3000/](http://10.33.195.185:3000/) *(Dashboard: Nodo Sur · Grupo 10 · Salud General)*
 - **Bastión SSH:**
@@ -138,3 +146,15 @@ Se diseñaron y ejecutaron tres suites de pruebas de carga contra `https://cms.t
   ssh -i profesor_tas10.pem -J profesor@10.33.195.185 profesor@10.33.199.83  # CMS1
   ssh -i profesor_tas10.pem -J profesor@10.33.195.185 profesor@10.33.199.86  # CMS2
   ```
+
+---
+
+## 6. Etapas de Evaluación y Defensa en Vivo (Viernes 27/11)
+
+Las 6 etapas establecidas para la defensa presencial se encuentran detalladas y automatizadas con comandos exactos en **[RUNBOOK.md](RUNBOOK.md)**:
+1. **Etapa 1:** Servicios operativos y validación de dependencia de Base de Datos.
+2. **Etapa 2:** Resolución DNS (`cms.tas10.local` $\to$ `10.33.195.185`) y navegación HTTPS.
+3. **Etapa 3:** Observabilidad y caída controlada de BD (`systemctl stop mariadb`, alertas Grafana y logs NTP).
+4. **Etapa 4:** Restauración de BD en base de evaluación (`wordpress_eval`, RTO real 1.83s, RPO 0s).
+5. **Etapa 5:** Validación final y recuperación de servicios.
+6. **Etapa 6:** Defensa individual sobre arquitectura, decisiones y operación.
