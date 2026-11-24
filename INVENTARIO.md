@@ -21,3 +21,16 @@ Todas las máquinas virtuales corren sobre **Ubuntu Server 24.04 LTS** y tienen 
 - **Disco:** 97 GB (gestión por volúmenes lógicos LVM)
 - **Métricas de host:** `node_exporter` activo en las 5 VMs (puerto `9100/tcp`, accesible únicamente desde `10.33.199.82`).
 - **Sincronización horaria (NTP):** Las 5 VMs sincronizadas (`ns1`, `CMS1` y `CMS2` hacia internet; `marcelovers` y `ubuntudb` contra `chrony` interno en `10.33.199.82`).
+
+---
+
+## Servicios Web y Cuentas de Acceso
+
+- **CMS y Motor E-commerce:** WordPress 6.7.2 + WooCommerce 9.7.1 sobre PHP 8.3 Apache en contenedores Docker (`CMS1` y `CMS2`).
+- **Tema:** Storefront 4.6.2 en español (`es_ES`).
+- **Almacenamiento de Medios:** `/var/www/html/wp-content/uploads` montado vía NFSv4 desde `10.33.199.84:/srv/nfs/wp-uploads`.
+- **Cuentas de Acceso (todas con clave `tas_10`):**
+  - `breyesc`: Administrador (Super Admin)
+  - `ben4shot`: Administrador (Super Admin)
+  - `profesor`: Administrador (Super Admin)
+  - `cliente`: Cliente (Customer)

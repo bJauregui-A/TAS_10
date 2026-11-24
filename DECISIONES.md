@@ -89,3 +89,38 @@ Es importante distinguir tres conceptos que la arquitectura cubre de forma disti
 - **Monitoreo en stack separado en `ns1`:** desplegamos Prometheus, Grafana, Alertmanager, `blackbox_exporter` y `mysqld_exporter` en `/opt/nodo-sur-monitoreo/` (independiente del borde `/opt/nodo-sur-borde/`) para poder detener o actualizar la observabilidad sin afectar el tráfico web ni DNS. Las 5 VMs exponen métricas de sistema vía `node_exporter` (puerto `9100/tcp` abierto solo para `10.33.199.82`).
 - **NTP interno en la red privada:** como `marcelovers` y `ubuntudb` no tienen salida a internet, se instaló `chrony` en `ns1` (restringido a `10.33.199.80/29` en `ufw`) para sincronizar la hora de todas las máquinas y asegurar correlación exacta de logs y alertas.
 
+
+## Tema oficial Storefront vs diseño ad-hoc
+
+Comparamos dos alternativas para la interfaz de la tienda:
+
+- **Maquetación visual manual mediante CSS y bloques sueltos**: permitía un diseño oscuro inicial, pero provocaba inconsistencia entre páginas (el inicio se veía distinto a la tienda y al checkout), rompía la estética responsiva y requería mantenimiento manual de estilos.
+- **Tema oficial Storefront de WooCommerce**: desarrollado y mantenido por los creadores de WooCommerce, ofrece integración nativa con el catálogo, cabecera con buscador y carrito dinámico, estructura responsiva limpia y soporte total para traducciones.
+
+**Elegimos Storefront** en ambos CMS (`CMS1` y `CMS2`), complementado con un `mu-plugin` ligero (`nodosur-ui.php`) para ubicar el ícono de Mi Cuenta junto al carrito y limpiar la barra de navegación (solo Inicio y Tienda), logrando una apariencia 100% profesional y nativa de WordPress.
+
+## Shortcodes clásicos vs Bloques Gutenberg en Carrito y Checkout
+
+Comparamos el motor de renderizado de las páginas transaccionales:
+
+- **Bloques modernos de Gutenberg (`wp:woocommerce/cart` y `wp:woocommerce/checkout`)**: traen textos fijos en inglés incrustados en su HTML, dependen de JavaScript/React en el cliente y exigen que las pasarelas de pago implementen APIs específicas para bloques. Esto generaba el error de *"No hay métodos de pago disponibles"* al usar pasarelas clásicas como Pago contra entrega (COD).
+- **Shortcodes estándar de WooCommerce (`[woocommerce_cart]` y `[woocommerce_checkout]`)**: estándar histórico y estable del ecosistema, 100% traducido al español en el servidor, compatible con todas las pasarelas de pago y sin fallos de renderizado en el navegador.
+
+**Elegimos los shortcodes estándar**, garantizando que las opciones de pago (Pago contra entrega y Transferencia bancaria) se rendericen siempre con sus radio buttons y textos explicativos sin errores de cliente.
+
+## Autolevantamiento ante fallos mediante drop-ins de systemd
+
+Para cumplir con la resiliencia sin arriesgar la evaluación práctica:
+
+- **Reinicio incondicional (`Restart=always`)**: levantaría los servicios incluso si un administrador los detiene a propósito con `systemctl stop` para una prueba o mantenimiento, impidiendo simular caídas controladas en la defensa.
+- **Reinicio condicional ante fallos (`Restart=on-failure` con `RestartSec=5s`)**: systemd distingue entre una detención limpia (`systemctl stop` devuelve código 0 y mantiene el servicio apagado) y una muerte anormal o crash (`kill -9`, SIGSEGV o error del proceso), ante la cual el sistema levanta el servicio de forma automática en 5 segundos.
+
+**Elegimos `Restart=on-failure`** en MariaDB (`ubuntudb`), NFS y Cron (`marcelovers`), logrando autolevantamiento ante incidentes reales mientras se preserva el control total para la demostración de la Etapa 3 del Runbook.
+
+## Estrategia de pruebas de rendimiento (k6)
+
+Se descartó medir rendimiento con herramientas puramente sintéticas de un solo hilo (como `ab` o peticiones curl aisladas) y se optó por **k6** ejecutado en contenedor Docker:
+
+- **Escenario 1 (Nominal):** 30 usuarios concurrentes para validar la experiencia esperada en operación regular.
+- **Escenario 2 (Estrés de lectura):** Rampa 30 → 60 → 100 → 150 VUs para identificar el punto exacto de quiebre por saturación de CPU de Apache/PHP (~145 VUs).
+- **Escenario 3 (Transaccional e-commerce):** 80 VUs ejecutando el flujo completo con escritura en MariaDB (`add_to_cart`) y descarga de imágenes en NFS, validando la estabilidad de la persistencia compartida con 0% de errores.

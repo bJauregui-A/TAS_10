@@ -17,6 +17,15 @@ Guía operativa para diagnosticar, contener, recuperar y revertir incidentes en 
 | Almacenamiento y Respaldos (NFS + Cron) | `marcelovers` · `10.33.199.84` | `nfs-kernel-server` + `/backups/scripts/hacer_backup.sh` | Marcelo Carrasco |
 | Base de Datos (MariaDB `:7033`) | `ubuntudb` · `10.33.199.85` | `mariadb.service` | Benjamín Jáuregui |
 
+### Cuentas preconfiguradas para la evaluación
+
+| Usuario | Rol | Contraseña | Destino |
+|:---|:---|:---|:---|
+| `breyesc` | Administrador | `tas_10` | [wp-admin](https://cms.tas10.local/wp-admin/) / [Mi cuenta](https://cms.tas10.local/my-account/) |
+| `ben4shot` | Administrador | `tas_10` | [wp-admin](https://cms.tas10.local/wp-admin/) / [Mi cuenta](https://cms.tas10.local/my-account/) |
+| `profesor` | Administrador | `tas_10` | [wp-admin](https://cms.tas10.local/wp-admin/) / [Mi cuenta](https://cms.tas10.local/my-account/) |
+| `cliente` | Cliente | `tas_10` | [Mi cuenta](https://cms.tas10.local/my-account/) / Tienda |
+
 ---
 
 ## 2. Guion paso a paso · Demo en vivo (6 etapas)
@@ -37,6 +46,10 @@ Guía operativa para diagnosticar, contener, recuperar y revertir incidentes en 
    systemctl is-active nfs-kernel-server cron
    ```
 3. Operación funcional desde el cliente (consulta real a BD): abrir `https://cms.tas10.local/shop/` y `https://cms.tas10.local/product/pintura/` y verificar respuesta `HTTP 200`.
+4. Flujo transaccional de compra: agregar al carrito, abrir `https://cms.tas10.local/checkout/`, seleccionar *Pago contra entrega* y confirmar pedido; verificar registro inmediato en MariaDB:
+   ```bash
+   mariadb -h 10.33.199.85 -P 7033 -u tas_cms -ptas_10 wordpress -e "SELECT id, status, total_amount, payment_method_title FROM wp_wc_orders ORDER BY id DESC LIMIT 1;"
+   ```
 
 ---
 

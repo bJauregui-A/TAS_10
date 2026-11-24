@@ -4,3 +4,4 @@ CLAUDE.md
 *.zip
 config/monitoreo/.env
 config/monitoreo/mysqld_exporter/.my.cnf
+last_conv.txt

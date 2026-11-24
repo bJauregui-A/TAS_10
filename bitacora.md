@@ -119,3 +119,45 @@
 **Cómo lo diagnosticamos:** consultamos el estado de HAProxy (`L7STS`), verificamos `HTTP 500` con `curl` y leímos el error exacto en `docker logs cms_backend`; además la alerta `BackendCMSCaido` se disparó en Prometheus/Grafana confirmando el monitoreo en vivo. La corrección consiste en escapar el símbolo como `$$_SERVER` en `compose.yaml`.
 
 
+
+## 13. Consultas DNS daban `REFUSED` desde la red de estudiantes/Eduroam (`10.33.96.0/19`)
+
+**Qué pasó:** al intentar resolver nombres contra el DNS de borde (`10.33.195.185`) desde un equipo conectado a la red Eduroam, `dig` arrojaba `;; ->>HEADER<<- opcode: QUERY, status: REFUSED`.
+
+**Por qué pasaba:** el ACL `trusted` en `/opt/nodo-sur-borde/bind9/named.conf.options` solo incluía `10.33.112.0/24` y tenía la red privada mal definida como `10.33.199.0/29` en lugar de `10.33.199.80/29`. La subred asignada por DHCP a los clientes en la universidad era `10.33.96.0/19` (fuera del ACL). Además, la zona `db.private.local` carecía de los registros `A` para `cms2` y `storage`.
+
+**Cómo lo arreglamos:** se actualizó `named.conf.options` agregando `10.33.96.0/19`, `127.0.0.1` y corrigiendo la red privada a `10.33.199.80/29`. Se agregaron los registros de `cms1`, `cms2` y `storage` en `db.private.local` (serial 3) y se reinició el contenedor `edge_dns`.
+
+**Cómo lo comprobamos:** se ejecutó `dig @10.33.195.185 cms.tas10.local +short` desde el cliente y resolvió inmediatamente `10.33.195.185` sin errores.
+
+## 14. HAProxy marcaba los CMS como caídos por timeout de healthcheck con paquetes de idioma
+
+**Qué pasó:** tras instalar y activar los paquetes de idioma español (`es_ES`) en WordPress y WooCommerce, HAProxy marcó intermitentemente a `cms1` y `cms2` como `DOWN` por `L7TOUT` (Layer 7 Timeout), generando errores 503 en el navegador.
+
+**Por qué pasaba:** la carga y parseo en frío de los catálogos de traducción `.l10n` y `.mo` en PHP 8.3 durante la comprobación de `/wp-login.php` superaba el tiempo de espera por defecto de HAProxy (2 segundos).
+
+**Cómo lo arreglamos:** se añadió `timeout check 10s` y se configuró el intervalo entre chequeos a 5 segundos (`check inter 5s cookie ...`) en `haproxy.cfg`.
+
+**Cómo lo comprobamos:** HAProxy validó ambos backends como `UP (L7OK)` de forma permanente y las consultas web volvieron a responder con latencia menor a 350 ms.
+
+## 15. Error "No hay métodos de pago disponibles" en la página de Checkout
+
+**Qué pasó:** al intentar comprar un producto desde el carrito, la página de finalizar compra (`/checkout/`) no mostraba ninguna opción de pago y al presionar comprar arrojaba un error de *"No hay ningún método de pago disponible"*.
+
+**Por qué pasaba:** confluían dos causas técnicas:
+1. La opción `woocommerce_cod_settings` en la tabla `wp_options` se había editado manualmente mediante una consulta SQL directa con longitudes de string serializadas erróneas (`s:18:"Pago contra entrega"` cuando la cadena tiene 19 caracteres). PHP fallaba al des-serializar la opción (`unserialize() === false`), dejando la pasarela inoperativa.
+2. La página de checkout utilizaba el bloque moderno de Gutenberg (`wp:woocommerce/checkout`), el cual requiere pasarelas compatibles con la API de React de WooCommerce; al no detectarlas en el frontend cliente, ocultaba los campos de pago.
+
+**Cómo lo arreglamos:** se reconfiguraron las pasarelas mediante la API nativa de WordPress en PHP (`update_option('woocommerce_cod_settings', ...)`) habilitando Pago contra entrega y Transferencia bancaria directa. Asimismo, se migraron las páginas de Carrito (ID 12) y Checkout (ID 13) a los shortcodes estándar `[woocommerce_cart]` y `[woocommerce_checkout]`.
+
+**Cómo lo comprobamos:** se ejecutó un flujo de compra completo simulando un cliente real, creándose exitosamente la Orden #43 por $25.000 con estado `wc-processing` en la tabla `wp_wc_orders`.
+
+## 16. Desincronización de plugins en el contenedor de CMS1 (`cms_backend`)
+
+**Qué pasó:** durante las pruebas se constató que la carpeta `/var/www/html/wp-content/plugins/woocommerce` no existía dentro del contenedor Docker `cms_backend` en CMS1, mientras que en CMS2 sí estaba presente.
+
+**Por qué pasaba:** el archivo `compose.yaml` de CMS1 utilizaba un volumen con nombre (`wp_data:/var/www/html`), aislando el contenedor de los archivos reales que residían en el host en `/var/www/html/wp-content/plugins/`. Al recrear el contenedor, la imagen base solo inicializó los plugins por defecto.
+
+**Cómo lo arreglamos:** se copiaron los directorios `woocommerce` y `woocommerce-mercadopago` desde el host hacia el contenedor `cms_backend` con permisos `www-data:www-data`, verificando su carga mediante CLI.
+
+**Cómo lo comprobamos:** se verificó que `WC()` carga correctamente en ambos CMS y que ambos devuelven las pasarelas `cod` y `bacs` en estado activo (`is_available: YES`).

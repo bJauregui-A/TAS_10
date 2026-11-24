@@ -65,6 +65,30 @@ Se usó IA generativa principalmente para entender **por qué** ocurrían errore
 - **Validación realizada:** se comprobó la sintaxis previa con `named-checkconf` y `haproxy -c`, y se analizó el requerimiento de capacidades Linux para enlace de puertos privileged en `network_mode: host`.
 - **Cambio aplicado:** se instaló Docker en `ns1`, se estructuró `/opt/nodo-sur-borde/` con configuraciones montadas en modo solo lectura, se concedió `NET_BIND_SERVICE` a HAProxy y se crearon scripts de prueba y reversión.
 
+## 9. Diagnóstico de flapeo en HAProxy tras activación de idioma español
+
+- **Herramienta:** Antigravity.
+- **Propósito:** identificar por qué los healthchecks L7 de HAProxy marcaban `DOWN` intermitente tras instalar los paquetes de idioma `es_ES`.
+- **Fragmento relevante:** `cms_backend,cms1,DOWN,L7TOUT` con respuesta de `wp-login.php` en ~3.2 segundos.
+- **Validación realizada:** se midió el tiempo de respuesta con `curl -w '%{time_total}'` directamente al backend comprobando que la lectura inicial de catálogos `.l10n` excedía el timeout de 2 segundos.
+- **Cambio aplicado:** se amplió el `timeout check` a 10s y el intervalo a 5s en `haproxy.cfg`.
+
+## 10. Fallo de métodos de pago en el Checkout de WooCommerce
+
+- **Herramienta:** Antigravity.
+- **Propósito:** resolver el mensaje *"No hay ningún método de pago disponible"* en el checkout a pesar de tener la pasarela configurada.
+- **Fragmento relevante:** `get_option("woocommerce_cod_settings")` devolviendo `bool(false)` debido a longitudes de string inconsistentes en la serialización PHP almacenada en MariaDB.
+- **Validación realizada:** se inspeccionó el valor crudo en la base de datos comparando las longitudes declaradas con las reales de cada cadena UTF-8, y se evaluó el comportamiento del bloque Gutenberg de checkout frente a pasarelas tradicionales.
+- **Cambio aplicado:** reconfiguración mediante la API nativa de WordPress y reemplazo de los bloques experimentales de Gutenberg por los shortcodes clásicos estándar `[woocommerce_cart]` y `[woocommerce_checkout]`.
+
+## 11. Diseño y ejecución de pruebas de carga con k6
+
+- **Herramienta:** Antigravity.
+- **Propósito:** formular escenarios de prueba realistas para medir capacidad y encontrar el límite de saturación de la arquitectura.
+- **Fragmento relevante:** scripts en `config/pruebas/` con umbrales `http_req_failed < 0.15` y p95 < 3s.
+- **Validación realizada:** ejecución en contenedor oficial `grafana/k6` contra `https://cms.tas10.local` pasando por HAProxy, midiendo nominal (30 VUs), estrés (150 VUs) y e-commerce con escrituras (80 VUs).
+- **Cambio aplicado:** incorporación de los scripts `k6-resistencia.js`, `k6-estres.js` y `k6-ecommerce-realista.js` junto a sus métricas en la documentación técnica.
+
 ## Nota
 
 Ningún comando o configuración se aplicó a ciegas. Todas las contraseñas reales y credenciales se mantuvieron fuera de las consultas.
