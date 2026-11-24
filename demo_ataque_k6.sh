@@ -43,6 +43,21 @@ fi
 
 echo -e "${VERDE}[OK]${NC} Binario k6 detectado: $($K6_BIN version)"
 
+# Consultar estado de Rate Limiting
+ESTADO_RL="DESACTIVADO"
+if grep -qE '^\s*http-request deny deny_status 429' "$SCRIPT_DIR/config/ns1-docker/haproxy/haproxy.cfg"; then
+  ESTADO_RL="ACTIVADO"
+fi
+
+if [ "$ESTADO_RL" = "ACTIVADO" ]; then
+  echo -e "${AMARILLO}[AVISO DE SEGURIDAD] Bloqueo por IP en HAProxy:${NC} ${VERDE}${BOLD}[ACTIVADO]${NC}"
+  echo -e "${AMARILLO}  * Las peticiones que superen 120 req/10s serán frenadas en el borde con HTTP 429.${NC}"
+  echo -e "${AMARILLO}  * Para probar saturación directa de CMS y BD, desactívalo antes con: ${BOLD}./toggle_rate_limiting.sh off${NC}"
+else
+  echo -e "${AMARILLO}[AVISO DE SEGURIDAD] Bloqueo por IP en HAProxy:${NC} ${AMARILLO}${BOLD}[DESACTIVADO / PERMISIVO]${NC}"
+  echo -e "${AMARILLO}  * Todo el tráfico pasará directamente a los workers PHP y MariaDB sin límite.${NC}"
+fi
+
 # Selección de Modo
 MODO="${1:-}"
 if [ -z "$MODO" ]; then

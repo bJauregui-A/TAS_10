@@ -176,7 +176,12 @@ Para ejecutar la demostración y defensa de forma rápida y controlada, se dispo
    ```bash
    ./demo_caida_servicios.sh
    ```
-   Menú interactivo para inyectar caídas de MariaDB (`systemctl stop mariadb`), failover de contenedor CMS1 o caída de host (`node_exporter`) para ver cómo el **State Timeline de Grafana** pinta el incidente en rojo y cómo se recupera en verde (cumple la **Etapa 3** de la rúbrica).
+   Menú interactivo para inyectar caídas de MariaDB (`systemctl stop mariadb`), failover de contenedor CMS1 o caída de host (`node_exporter`) para ver cómo el **State Timeline de Grafana** pinta el incidente en rojo y cómo se recupera en verde (cumple la **Etapa 3** de la rúbrica). Incluye además acceso directo al interruptor de rate limiting.
+4. **Interruptor de Bloqueo por IP / Rate Limiting ([`./toggle_rate_limiting.sh`](toggle_rate_limiting.sh)):**
+   ```bash
+   ./toggle_rate_limiting.sh [on|off|status]
+   ```
+   Permite activar o desactivar en caliente (0.2 segundos, sin caída) el rate limiting en HAProxy (>120 req/10s $\to$ HTTP 429). Ideal para demostrar al docente la diferencia entre el modo protegido (el atacante recibe 429 y el clúster se protege) y el modo permisivo (el tráfico de estrés satura los workers CMS/BD).
 
 ---
 

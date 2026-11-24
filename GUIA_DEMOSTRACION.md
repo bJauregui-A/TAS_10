@@ -14,6 +14,7 @@ Todos los scripts ejecutables se encuentran directamente en el directorio raíz 
 | **[`./demo_ataque_k6.sh`](demo_ataque_k6.sh)** | Ataque de saturación k6 (búsqueda de límite de resistencia) | Pruebas de Carga | HAProxy (`.185`), CMS1 (`.83`), CMS2 (`.86`), MariaDB (`.85`) |
 | **[`./demo_comprobar_respaldos.sh`](demo_comprobar_respaldos.sh)** | Auditoría de respaldos, test de integridad y medición de RTO en vivo | **Etapa 4** | Storage/NFS (`.84`), MariaDB (`.85`), Bastión (`.185`) |
 | **[`./demo_caida_servicios.sh`](demo_caida_servicios.sh)** | Inyección de fallas controladas, failover y observabilidad | **Etapa 3** | MariaDB (`.85`), CMS1 (`.83`), CMS2 (`.86`), Grafana (`.185`) |
+| **[`./toggle_rate_limiting.sh`](toggle_rate_limiting.sh)** | Interruptor en caliente de Rate Limiting y Bloqueo por IP (HTTP 429) | Seguridad L7 | HAProxy Borde (`10.33.195.185`) |
 
 ### Requisitos previos para ejecutar los scripts:
 1. Ejecutar desde el equipo de trabajo (o clon del repositorio) que tenga conectividad a la red del proyecto (`10.33.195.185`).
@@ -157,7 +158,32 @@ Ofrece tres escenarios de prueba:
 
 ---
 
-## 5. El Historial de Caídas en Grafana (State Timeline)
+## 5. Script 4: Interruptor en Caliente de Rate Limiting (`./toggle_rate_limiting.sh`)
+
+### ¿Qué hace?
+Permite activar o desactivar en caliente (**en 0.2 segundos y con cero caída de servicio**) la regla de corte perimetral de HAProxy que bloquea IPs abusivas que superen 120 req/10s (`HTTP 429 Too Many Requests`).
+
+### ¿Para qué sirve durante la defensa?
+Permite demostrar a la comisión la eficacia de la seguridad en Capa 7:
+1. **Con protección ACTIVADA:**
+   Al lanzar `./demo_ataque_k6.sh`, el atacante comienza a recibir respuestas `429 Too Many Requests`. Las peticiones son interceptadas en el borde HAProxy y no tocan a los servidores CMS ni a la base de datos, manteniéndolos al 0% de uso.
+2. **Con protección DESACTIVADA (Modo permisivo):**
+   Al desactivarlo con `./toggle_rate_limiting.sh off` y volver a lanzar el ataque, todo el tráfico ingresa directamente a los contenedores `CMS1` y `CMS2`, permitiendo evaluar el límite físico de CPU de Apache/PHP y la concurrencia de MariaDB.
+
+### Modo de uso:
+```bash
+# Menú interactivo
+./toggle_rate_limiting.sh
+
+# Comandos directos:
+./toggle_rate_limiting.sh on      # Activa el bloqueo perimetral (>120 req/10s -> 429)
+./toggle_rate_limiting.sh off     # Desactiva el bloqueo (modo permisivo de estrés)
+./toggle_rate_limiting.sh status  # Consulta el estado actual de la regla en HAProxy
+```
+
+---
+
+## 6. El Historial de Caídas en Grafana (State Timeline)
 
 ### Cómo Ingresar a Grafana:
 

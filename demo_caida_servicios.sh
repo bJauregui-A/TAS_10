@@ -49,10 +49,11 @@ echo -e "\n${BOLD}Selecciona la prueba de resiliencia a ejecutar:${NC}"
 echo -e "  ${CIAN}1)${NC} ${BOLD}Caída controlada de MariaDB${NC} (Etapa 3 de la Rúbrica)"
 echo -e "  ${CIAN}2)${NC} ${BOLD}Caída y Failover de Backend CMS1${NC} (Demuestra balanceo HAProxy sin corte)"
 echo -e "  ${CIAN}3)${NC} ${BOLD}Caída de Host/Máquina Virtual${NC} (Demuestra detección en State Timeline)"
-echo -e "  ${CIAN}4)${NC} Salir"
+echo -e "  ${CIAN}4)${NC} ${BOLD}Activar / Desactivar Bloqueo por IP${NC} (Toggle Rate Limiting en HAProxy)"
+echo -e "  ${CIAN}5)${NC} Salir"
 echo ""
 
-read -rp "Selecciona una opción [1-4]: " OPCION
+read -rp "Selecciona una opción [1-5]: " OPCION
 
 case "$OPCION" in
   1)
@@ -102,6 +103,10 @@ case "$OPCION" in
     run_node "$CMS2_IP" "echo tas_10 | sudo -S systemctl start node_exporter"
     sleep 2
     echo -e "${VERDE}${BOLD}[HOST RESTAURADO] Monitoreo reactivado. El Timeline volverá a VERDE.${NC}"
+    ;;
+
+  4)
+    "$SCRIPT_DIR/toggle_rate_limiting.sh"
     ;;
 
   *)
