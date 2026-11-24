@@ -190,3 +190,18 @@
 4. **Caídas Controladas (`demo_caida_servicios.sh`):** script interactivo para inyectar fallos de MariaDB (Etapa 3), failover de CMS1 y caída de node_exporter para observar el cambio inmediato a rojo en Grafana.
 
 **Cómo lo comprobamos:** se ejecutó de extremo a extremo `./demo_comprobar_respaldos.sh --clean`, certificando un RTO real de 3.79s con 67 tablas y 6 usuarios idénticos a producción, y se probó la ejecución de k6 alcanzando 100% de éxito en peticiones.
+
+## 19. Implementación de Rate Limiting y Bloqueo de IPs Abusivas en HAProxy (Anti-DDoS L7)
+
+**Qué pasó:** se evaluó la necesidad de proteger el clúster ante ráfagas abusivas de peticiones o ataques de denegación de servicio (DoS) provenientes de una misma IP, evitando que saturen los workers de Apache/PHP o las conexiones a MariaDB.
+
+**Por qué pasaba:** si una sola IP lanza cientos de peticiones por segundo sin restricción perimetral, el balanceador las distribuía 50/50 entre CMS1 y CMS2, provocando que los workers agoten el pool de conexiones y eleven la latencia para los usuarios legítimos.
+
+**Cómo lo arreglamos:** se configuró en `frontend https_in` de HAProxy una tabla de seguimiento en memoria (`stick-table type ip size 100k expire 2m store http_req_rate(10s)`) con lista blanca para la red interna (`127.0.0.1`, `10.33.199.0/24`) y una regla de corte:
+```haproxy
+acl req_rate_abuse sc_http_req_rate(0) gt 120
+http-request deny deny_status 429 hdr Retry-After 30 if req_rate_abuse !whitelist_ips
+```
+Cualquier IP externa que supere 120 peticiones en 10 segundos (>12 req/s continuos) es bloqueada inmediatamente en el borde con código `HTTP 429 Too Many Requests`.
+
+**Cómo lo comprobamos:** se lanzó una ráfaga paralela de 160 peticiones concurrentes desde un cliente de prueba. El balanceador procesó exactamente las primeras 120 peticiones con `HTTP 200` y bloqueó las 40 restantes con `HTTP 429`. Tras 10 segundos de enfriamiento, el acceso se reanudó automáticamente en `HTTP 200`.

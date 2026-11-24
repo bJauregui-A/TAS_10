@@ -124,3 +124,13 @@ Se descartó medir rendimiento con herramientas puramente sintéticas de un solo
 - **Escenario 1 (Nominal):** 30 usuarios concurrentes para validar la experiencia esperada en operación regular.
 - **Escenario 2 (Estrés de lectura):** Rampa 30 → 60 → 100 → 150 VUs para identificar el punto exacto de quiebre por saturación de CPU de Apache/PHP (~145 VUs).
 - **Escenario 3 (Transaccional e-commerce):** 80 VUs ejecutando el flujo completo con escritura en MariaDB (`add_to_cart`) y descarga de imágenes en NFS, validando la estabilidad de la persistencia compartida con 0% de errores.
+
+## Mitigación de DoS y Rate Limiting por IP en HAProxy (Stick-Tables)
+
+Comparamos tres formas de limitar ráfagas abusivas de peticiones y ataques de denegación de servicio (DoS):
+
+- **Plugins de WordPress (ej. Wordfence)**: consumen CPU y memoria de PHP en cada petición entrante antes de decidir si bloquean o no; bajo un ataque masivo, el servidor web y la base de datos se saturan igualmente procesando las peticiones antes del bloqueo.
+- **Reglas iptables / fail2ban en el host**: analizan logs con retardo o bloquean a nivel de paquetes L3/L4 sin conocer el protocolo HTTP ni poder retornar respuestas HTTP 429 limpias.
+- **Stick-Tables nativas en el balanceador HAProxy (Borde L7)**: HAProxy mantiene una tabla en memoria ultra-rápida (`stick-table type ip size 100k expire 2m store http_req_rate(10s)`). Si una IP supera 120 peticiones en 10 segundos (>12 req/s continuos), HAProxy la frena en seco retornando `HTTP 429 Too Many Requests` con cabecera `Retry-After: 30`, sin enviar un solo byte a los CMS ni a MariaDB. Se excluyó la red interna y localhost mediante una lista blanca (`whitelist_ips`).
+
+**Elegimos Stick-Tables en HAProxy**, logrando que el clúster soporte ráfagas extremas mientras los atacantes son contenidos en el perímetro sin consumir recursos de backend.
