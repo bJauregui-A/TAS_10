@@ -159,11 +159,25 @@ Ofrece tres escenarios de prueba:
 
 ## 5. El Historial de Caídas en Grafana (State Timeline)
 
-### Acceso a Grafana:
-- **URL:** [http://10.33.195.185:3000/](http://10.33.195.185:3000/)
-- **Usuario:** `admin`
-- **Contraseña:** `tas10_grafana`
-- **Dashboard:** *Nodo Sur · Grupo 10 · Salud General* (carpeta `Nodo Sur`)
+### Cómo Ingresar a Grafana:
+
+1. **Vía Navegador Web (Conexión Directa en Red USM / VPN):**
+   - **URL:** [http://10.33.195.185:3000/](http://10.33.195.185:3000/)
+   - **Usuario:** `admin`
+   - **Contraseña:** `tas10_grafana`
+
+2. **Vía Túnel SSH (Si se accede desde una red externa o sin VPN):**
+   Si la IP `10.33.195.185` no abre directamente en tu navegador, ejecuta en una terminal:
+   ```bash
+   ssh -i profesor_tas10.pem -L 3000:localhost:3000 profesor@10.33.195.185
+   ```
+   Luego abre en tu navegador local: **[http://localhost:3000/](http://localhost:3000/)** (e ingresa con `admin` / `tas10_grafana`).
+
+3. **Ubicación del Dashboard Principal:**
+   - En el menú lateral izquierdo de Grafana, haz clic en **Dashboards**.
+   - Ingresa a la carpeta **Nodo Sur**.
+   - Selecciona el dashboard: **`Nodo Sur · Grupo 10 · Salud General`** (enlace directo: `/d/nodo-sur-overview/`).
+   - *(Recomendación para la demo: en la esquina superior derecha, cambia el intervalo de refresco de `Off` a `5s` o `10s` para ver las métricas actualizarse en vivo sin recargar la página).*
 
 ### ¿Cómo interpretar los Paneles 12 y 13?
 Al final del dashboard se ubican los dos paneles de línea temporal de estado:

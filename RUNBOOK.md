@@ -68,7 +68,7 @@ Guía operativa para diagnosticar, contener, recuperar y revertir incidentes en 
 ---
 
 ### Etapa 3 · Observabilidad e incidente controlado de Base de Datos
-1. **Estado normal previo:** Abrir Grafana en `http://10.33.195.185:3000` (dashboard *Nodo Sur · Grupo 10 · Salud General*) y mostrar:
+1. **Estado normal previo:** Abrir Grafana en `http://10.33.195.185:3000/` (credenciales: `admin` / `tas10_grafana`, o túnel `ssh -i profesor_tas10.pem -L 3000:localhost:3000 profesor@10.33.195.185`), acceder al dashboard *Nodo Sur · Grupo 10 · Salud General* y mostrar:
    - `Hosts Activos: 5`, `Backends CMS UP: 2`, `MariaDB: UP`, `Sonda HTTPS: 2`, `Alertas Activas: 0`.
 2. **Inyectar falla controlada en `ubuntudb` (`10.33.199.85`):**
    ```bash

@@ -134,7 +134,16 @@ Se diseñaron y ejecutaron tres suites de pruebas de carga contra `https://cms.t
   | `ben4shot` | Administrador (Super Admin) | `tas_10` | Cuenta de equipo / Integrante |
   | `cliente` | Cliente (Customer) | `tas_10` | Pruebas de compra, carrito y checkout |
 - **Estadísticas HAProxy:** [http://10.33.195.185:8404/](http://10.33.195.185:8404/)
-- **Panel de Monitoreo Grafana:** [http://10.33.195.185:3000/](http://10.33.195.185:3000/) *(Usuario: `admin` · Clave: `tas10_grafana` · Incluye paneles 12 y 13 con State Timeline de caídas de máquinas y servicios)*
+- **Panel de Monitoreo Grafana:**
+  - **URL Directa:** [http://10.33.195.185:3000/](http://10.33.195.185:3000/)
+  - **Ruta del Dashboard:** Menú izquierdo $\to$ **Dashboards** $\to$ Carpeta **Nodo Sur** $\to$ **Nodo Sur · Grupo 10 · Salud General** (o directo a `/d/nodo-sur-overview/`).
+  - **Usuario:** `admin`
+  - **Contraseña:** `tas10_grafana`
+  - **Acceso por túnel SSH (si se accede fuera de la red/VPN):**
+    ```bash
+    ssh -i profesor_tas10.pem -L 3000:localhost:3000 profesor@10.33.195.185
+    # Luego abrir en el navegador local: http://localhost:3000/
+    ```
 - **Bastión SSH:**
   ```bash
   ssh -i profesor_tas10.pem profesor@10.33.195.185
