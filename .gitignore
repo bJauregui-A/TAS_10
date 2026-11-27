@@ -5,3 +5,5 @@ CLAUDE.md
 config/monitoreo/.env
 config/monitoreo/mysqld_exporter/.my.cnf
 last_conv.txt
+__pycache__/
+*.pyc

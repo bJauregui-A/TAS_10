@@ -1,0 +1,84 @@
+export TERM=xterm-256color
+
+# SSH
+
+Bastión / Borde / Monitoreo (ns1 · 10.33.195.185)
+  
+    ssh -i ~/Develop/TAS_10/profesor_tas10.pem profesor@10.33.195.185
+  
+CMS 1 (benserver · 10.33.199.83) 
+  
+    ssh -i ~/Develop/TAS_10/profesor_tas10.pem -o "ProxyCommand=ssh -i ~/Develop/TAS_10/profesor_tas10.pem -W %h:%p profesor@10.33.195.185" profesor@10.33.199.83
+  
+CMS 2 (tascms2 · 10.33.199.86) 
+  
+    ssh -i ~/Develop/TAS_10/profesor_tas10.pem -o "ProxyCommand=ssh -i ~/Develop/TAS_10/profesor_tas10.pem -W %h:%p profesor@10.33.195.185" profesor@10.33.199.86
+ 
+NFS y Respaldos (marcelovers · 10.33.199.84)
+  
+    ssh -i ~/Develop/TAS_10/profesor_tas10.pem -o "ProxyCommand=ssh -i ~/Develop/TAS_10/profesor_tas10.pem -W %h:%p profesor@10.33.195.185" profesor@10.33.199.84
+  
+Base de Datos MariaDB (ubuntudb · 10.33.199.85)
+  
+    ssh -i ~/Develop/TAS_10/profesor_tas10.pem -o "ProxyCommand=ssh -i ~/Develop/TAS_10/profesor_tas10.pem -W %h:%p profesor@10.33.195.185" profesor@10.33.199.85
+
+# Ataque
+
+// En haproxy
+
+Ver si bloquea por ip
+    grep 'deny_status 429' /opt/nodo-sur-borde/haproxy/haproxy.cfg 
+
+  Desactiva el bloqueo (comenta la línea y recarga HAProxy en caliente):                           
+                                                                                                   
+    sudo sed -i 's/^\s*\(http-request deny deny_status 429.*\)/# \1/' /opt/nodo-sur-borde/haproxy/haproxy.cfg                                                        
+    sudo docker restart edge_haproxy
+
+  Activar bloqueo
+    sudo sed -i 's/^\s*#\s*\(http-request deny deny_status 429.*\)/    \1/' /opt/nodo-sur-borde/haproxy/haproxy.cfg
+    sudo docker restart edge_haproxy
+
+// En BD
+
+  Test de auto-levantamiento                           
+      Auto-recuperación de MariaDB
+        sudo pkill -9 mariadbd                                                
+        watch -n 1 systemctl is-active mariadb                                
+                                                                              
+      Caída de mariadb para grafana
+        sudo systemctl stop mariadb                                           
+        sudo systemctl start mariadb
+	
+// En CMS        
+	sudo docker kill cms_backend   # Docker lo levanta solo               
+        watch -n 1 sudo docker ps     
+             
+     Caida visible en grafana                                                                    
+        sudo docker stop cms_backend (cms_backend es para cms1, en cms2 es nodo_cms2)
+        sudo docker start cms_backend  # para volver                                    
+                         
+// Tirar los cms
+
+MODO=extremo TARGET_URL=https://10.33.195.185 HOST_HEADER=cms.tas10.local k6 run ~/Develop/TAS_10/config/pruebas/k6-ataque-saturacion.js
+
+# Test Respaldos
+
+//En nfs
+
+	ls -lh /backups/db/ /backups/wp_files/  # ver los respaldos
+	sudo crontab -l. 		#Para ver cron de respaldo O
+
+// Comprobar que los respaldos no están corruptos
+	ULTIMO=$(ls -1t /backups/db/ | head -n1)
+        gzip -t /backups/db/$ULTIMO && echo "OK"
+        sha256sum /backups/db/$ULTIMO
+
+// borrar wordpress_eval si existe 
+	mariadb -h 10.33.199.85 -P 7033 -u tas_cms -ptas_10 -e "DROP DATABASE IF EXISTS wordpress_eval; SHOW DATABASES;" 
+
+// crear la e inyectarle el respaldo
+	time (mariadb -h 10.33.199.85 -P 7033 -u tas_cms -ptas_10 -e "CREATE DATABASE wordpress_eval;" && gunzip -c /backups/db/$ULTIMO | mariadb -h 10.33.199.85 -P 7033 -u tas_cms -ptas_10 wordpress_eval)
+
+// luego ve las tablas
+
+// luego borrala
